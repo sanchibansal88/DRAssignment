@@ -1,0 +1,75 @@
+replicaCount: 3
+
+image:
+  repository: app
+  tag: latest
+  pullPolicy: Always
+
+serviceAccount:
+  create: false
+  annotations: {}
+  name: ""
+
+service:
+  type: ClusterIP
+  port: 80
+
+podAnnotations: {}
+podLabels: {}
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 300m
+    memory: 256Mi
+
+affinity: {}
+nodeSelector: {}
+tolerations: []
+
+autoScaling:
+  enabled: false
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+database:
+  existingSecret: database-credentials
+  hostKey: DATABASE_HOST
+  readReplicaKey: DATABASE_READ_REPLICA_HOST
+  userKey: DATABASE_USER
+  passwordKey: DATABASE_PASSWORD
+  urlKey: DATABASE_URL
+
+storage:
+  secretName: storage-credentials
+  accountNameKey: STORAGE_ACCOUNT_NAME
+  accountKeyKey: STORAGE_ACCOUNT_KEY
+  containerKey: STORAGE_CONTAINER
+  blobKey: STORAGE_BLOB
+
+csv:
+  localPath: /app/sample_users.csv
+
+config:
+  serviceMode: active
+  jupyterHubBaseUrl: https://notebooks.example.com
+  extra: {}
+
+env:
+  extra: []
+
+livenessProbe:
+  path: /healthz
+  initialDelaySeconds: 10
+  periodSeconds: 10
+
+readinessProbe:
+  path: /healthz
+  initialDelaySeconds: 5
+  periodSeconds: 5
+
+rbac:
+  create: false

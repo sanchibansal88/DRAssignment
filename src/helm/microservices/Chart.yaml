@@ -1,0 +1,6 @@
+apiVersion: v2
+name: microservices
+version: 0.1.0
+description: Deploys the API, business-logic, and data-ingestion services built from the services/ directory.
+appVersion: "1.0.0"
+type: application

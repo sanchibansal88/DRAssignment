@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: app-platform
+  labels:
+    app.kubernetes.io/name: app-platform
+    tier: backend
+  annotations:
+    dr.sre.io/config-version: "1"
+data:
+  DATABASE_NAME: appdb
+  DATABASE_PORT: "5432"
+  JUPYTERHUB_BASE_URL: https://notebooks.example.com
+  SERVICE_MODE: active

@@ -1,0 +1,76 @@
+namespace: app-platform
+
+commonLabels: {}
+
+config:
+  serviceMode: active
+  jupyterHubBaseUrl: https://notebooks.example.com
+  extra: {}
+
+secret:
+  name: database-credentials
+  hostKey: DATABASE_HOST
+  replicaKey: DATABASE_READ_REPLICA_HOST
+  userKey: DATABASE_USER
+  passwordKey: DATABASE_PASSWORD
+  urlKey: DATABASE_URL
+
+api:
+  image:
+    repository: ghcr.io/datadevops/dr-frontend-api
+    tag: latest
+    pullPolicy: Always
+  replicaCount: 3
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+  env: []
+
+businessLogic:
+  image:
+    repository: ghcr.io/datadevops/dr-business-logic-service
+    tag: latest
+    pullPolicy: Always
+  replicaCount: 3
+  service:
+    type: ClusterIP
+    port: 8080
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  env: []
+
+dataIngest:
+  image:
+    repository: ghcr.io/datadevops/dr-data-ingest-service
+    tag: latest
+    pullPolicy: Always
+  replicaCount: 2
+  service:
+    type: ClusterIP
+    port: 8080
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  env: []
+
+podAnnotations: {}
+podLabels: {}
+nodeSelector: {}
+affinity: {}
+tolerations: []

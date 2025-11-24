@@ -1,0 +1,126 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "frontend-api.fullname" . }}
+  labels:
+    {{- include "frontend-api.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoScaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "frontend-api.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "frontend-api.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ include "frontend-api.fullname" . }}
+      {{- else if .Values.serviceAccount.name }}
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      {{- end }}
+      containers:
+        - name: frontend
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: SERVICE_NAME
+              value: frontend-api
+            - name: SERVICE_MODE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "frontend-api.fullname" . }}-config
+                  key: SERVICE_MODE
+            - name: JUPYTERHUB_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "frontend-api.fullname" . }}-config
+                  key: JUPYTERHUB_BASE_URL
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.existingSecret }}
+                  key: {{ .Values.database.urlKey }}
+            - name: DATABASE_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.existingSecret }}
+                  key: {{ .Values.database.hostKey }}
+            - name: DATABASE_READ_REPLICA_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.existingSecret }}
+                  key: {{ .Values.database.readReplicaKey }}
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.existingSecret }}
+                  key: {{ .Values.database.userKey }}
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.existingSecret }}
+                  key: {{ .Values.database.passwordKey }}
+            - name: STORAGE_ACCOUNT_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.storage.secretName }}
+                  key: {{ .Values.storage.accountNameKey }}
+            - name: STORAGE_ACCOUNT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.storage.secretName }}
+                  key: {{ .Values.storage.accountKeyKey }}
+            - name: STORAGE_CONTAINER_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.storage.secretName }}
+                  key: {{ .Values.storage.containerKey }}
+            - name: STORAGE_BLOB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.storage.secretName }}
+                  key: {{ .Values.storage.blobKey }}
+            - name: CSV_SOURCE_PATH
+              value: {{ .Values.csv.localPath | quote }}
+            {{- with .Values.env.extra }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.readinessProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.livenessProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

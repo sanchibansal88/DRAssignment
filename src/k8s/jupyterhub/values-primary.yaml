@@ -1,0 +1,55 @@
+hub:
+  image:
+    name: quay.io/jupyterhub/k8s-hub
+    tag: "4.3.1"
+  db:
+    type: postgres
+    upgrade: true
+    url: ${PRIMARY_POSTGRES_FQDN}
+  config:
+    Authenticator:
+      admin_users:
+        - admin
+    JupyterHub:
+      authenticator_class: dummy
+    Spawner:
+      start_timeout: 600
+  services:
+    dr-watcher:
+      admin: true
+      apiToken: ${HUB_SERVICE_TOKEN}
+proxy:
+  secretToken: ${PROXY_SECRET_TOKEN}
+singleuser:
+  defaultUrl: /lab
+  storage:
+    type: dynamic
+    capacity: 5Gi
+    dynamic:
+      storageClass: azurefile-csi
+  image:
+    name: acrmicroservicesluwh.azurecr.io/jupyterhub-singleuser
+    tag: "5.4.1"
+  extraEnv:
+    JUPYTER_RUNTIME_DIR: /tmp/jupyter-runtime
+  lifecycleHooks:
+    postStart:
+      exec:
+        command:
+          - bash
+          - -lc
+          - "mkdir -p /tmp/jupyter-runtime && chmod 700 /tmp/jupyter-runtime"
+prePuller:
+  hook:
+    enabled: false
+ingress:
+  enabled: true
+  hosts:
+    - notebooks-primary.example.com
+  annotations:
+    kubernetes.io/ingress.class: azure/application-gateway
+    cert-manager.io/cluster-issuer: letsencrypt
+  tls:
+    - hosts:
+        - notebooks-primary.example.com
+      secretName: notebooks-primary-tls

@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  frontend:
+    build:
+      context: ..
+      dockerfile: services/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://pguser:pgpass@postgres:5432/appdb
+      PG_POOL_MIN: 1
+      PG_POOL_MAX: 5
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: pguser
+      POSTGRES_PASSWORD: pgpass
+      POSTGRES_DB: appdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
